@@ -125,3 +125,32 @@ class VideoShot:
                 f_element = [1000 + fs_candidate[i], 1000 + fe_candidate[i]]
                 f_real.append(f_element)
         return f_real
+
+    def output_cuts(self, cuts, video_path):
+        vid_obj = cv2.VideoCapture(video_path)
+
+        for ce in cuts:
+            vid_obj.set(cv2.CAP_PROP_POS_FRAMES, ce[1])
+            success, image = vid_obj.read()
+
+            if not success:
+                print("Error loading the cut scenes")
+                return
+
+            cv2.imwrite("outputs/cuts/frame%d.jpg" % ce[1], image)
+        print("cuts extracted successfully!")
+
+    def output_transitions(self, transitions, video_path):
+        vid_obj = cv2.VideoCapture(video_path)
+
+        for fs in transitions:
+            vid_obj.set(cv2.CAP_PROP_POS_FRAMES, fs[0]+1)
+            success, image = vid_obj.read()
+
+            if not success:
+                print("Error loading the cut scenes")
+                return
+
+            cv2.imwrite("outputs/transitions/frame%d.jpg" % (fs[0]+1), image)
+
+        print("transitions extracted successfully!")
