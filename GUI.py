@@ -1,15 +1,30 @@
 import customtkinter as ctk
-from PIL import Image
+import tkinter as tk
+from PIL import Image, ImageTk
 import os
 
 
-def button_event(path):
-    print(f"button pressed at {path}")
+def show_video_shot(frame, path):
+    video_frame = ctk.CTkToplevel(frame)
+    video_frame.title(f"Shot from {path[-13:]}")
+    img = ctk.CTkImage(dark_image=Image.open(path), size=(500, 500))
+    label = ctk.CTkLabel(video_frame, image=img, text=path[-13:], compound="top")
+    label.pack()
+
+
+def play_video():
+    pass
+
+
+def button_event(frame, path):
+    show_video_shot(frame, path)
+    print(f"button pressed on [{path}]")
 
 
 def create_image_grid(frame, row, col, image_path, callback):
     img = ctk.CTkImage(dark_image=Image.open(image_path), size=(200, 200))
-    label = ctk.CTkButton(frame, image=img, text=image_path[-13:], compound="top", command=lambda: callback(image_path))
+    label = ctk.CTkButton(frame, image=img, text=image_path[-13:], compound="top",
+                          command=lambda: callback(frame, image_path))
     label.grid(row=row, column=col, padx=5, pady=5)
 
 
@@ -35,8 +50,8 @@ tabView.add("Gradual Transitions")
 
 tabView.set('Load Video')
 
-sc1 = ctk.CTkScrollableFrame(tabView.tab("Cut Scenes"),height=700, width=700)
-sc2 = ctk.CTkScrollableFrame(tabView.tab("Gradual Transitions"), height=700, width= 700)
+sc1 = ctk.CTkScrollableFrame(tabView.tab("Cut Scenes"), height=700, width=700)
+sc2 = ctk.CTkScrollableFrame(tabView.tab("Gradual Transitions"), height=700, width=700)
 sc1.pack()
 sc2.pack()
 
