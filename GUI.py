@@ -1,24 +1,68 @@
 import customtkinter as ctk
-import tkinter as tk
+from VideoShot import VideoShot
+from tkinter import filedialog
+
+import cv2
 from PIL import Image, ImageTk
 import os
+
+VID_PATH = None
+OBJ = None
+
+
+def load_video():
+    global VID_PATH, OBJ
+    video_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi")])
+    VID_PATH = video_path
+
+    # Initialize the VideoShot Object
+    OBJ = VideoShot(VID_PATH)
+    print(f"Selected Video File: {VID_PATH}")
 
 
 def show_video_shot(frame, path):
     video_frame = ctk.CTkToplevel(frame)
-    video_frame.title(f"Shot from {path[-13:]}")
+    video_frame.title(f"Shot from frame {path[-8:-4]}")
     img = ctk.CTkImage(dark_image=Image.open(path), size=(500, 500))
-    label = ctk.CTkLabel(video_frame, image=img, text=path[-13:], compound="top")
+    label = ctk.CTkLabel(video_frame, image=img, text=path[-13:-4], compound="top")
     label.pack()
+    start_frame = int(path[-8:-4])
+    end_frame = start_frame + 10  # function call to get_nearest_end_frame
+
+    if VID_PATH:
+        video_path = VID_PATH
+    else:
+        video_path = '20020924_juve_dk_02a.mpg'
+
+    play_button = ctk.CTkButton(video_frame, text="Play Shot",
+                                command=lambda: play_video(label, start_frame, end_frame, video_path))
+    play_button.pack()
 
 
-def play_video():
-    pass
+def play_video(parent_label, start_frame, end_frame, video_path):
+    cap = cv2.VideoCapture(video_path)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+    def update_label():
+        nonlocal cap
+        ret, frame = cap.read()
+        if ret and start_frame <= cap.get(cv2.CAP_PROP_POS_FRAMES) <= end_frame:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame)
+            img = ctk.CTkImage(dark_image=img, size=(500, 500))
+            parent_label.configure(image=img)
+            parent_label.image = img
+            parent_label.after(60, update_label)
+        else:
+            # Video playback is finished or an error occurred
+            cap.release()
+
+    update_label()
 
 
-def button_event(frame, path):
+def open_shot_window(frame, path):
     show_video_shot(frame, path)
-    print(f"button pressed on [{path}]")
+    print(f"shot window opened for [{path}]")
 
 
 def create_image_grid(frame, row, col, image_path, callback):
@@ -47,9 +91,14 @@ tabView.pack()
 tabView.add("Load Video")
 tabView.add("Cut Scenes")
 tabView.add("Gradual Transitions")
-
 tabView.set('Load Video')
 
+# Load Video Tab
+Load_vid = ctk.CTkButton(tabView.tab("Load Video"), text="Select the video file", height=50, width=100,
+                         command=lambda: load_video())
+Load_vid.pack(padx=50, pady=50)
+
+# Cut & Transition Tabs
 sc1 = ctk.CTkScrollableFrame(tabView.tab("Cut Scenes"), height=700, width=700)
 sc2 = ctk.CTkScrollableFrame(tabView.tab("Gradual Transitions"), height=700, width=700)
 sc1.pack()
@@ -61,11 +110,11 @@ num_columns = 3
 for i, p in enumerate(cut_imgs):
     row = i // num_columns
     col = i % num_columns
-    create_image_grid(sc1, row, col, p, button_event)
+    create_image_grid(sc1, row, col, p, open_shot_window)
 
 for i, p in enumerate(transition_imgs):
     row = i // num_columns
     col = i % num_columns
-    create_image_grid(sc2, row, col, p, button_event)
+    create_image_grid(sc2, row, col, p, open_shot_window)
 
 app.mainloop()

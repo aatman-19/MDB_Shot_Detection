@@ -17,6 +17,8 @@ if __name__ == "__main__":
     print(shot_obj.cuts)
     print("-" * 20 + "Transition" + "-" * 20)
     print(shot_obj.transitions)
-
-    shot_obj.output_cuts(shot_obj.cuts,shot_obj.video_path)
-    shot_obj.output_transitions(shot_obj.transitions,shot_obj.video_path)
+    print("-"*20)
+    next_frame = shot_obj.get_nearest_end_frame(1868,shot_obj.cuts,shot_obj.transitions)
+    print(f"given frame 1868, end frame: {next_frame}")
+    # shot_obj.output_cuts(shot_obj.cuts,shot_obj.video_path)
+    # shot_obj.output_transitions(shot_obj.transitions,shot_obj.video_path)

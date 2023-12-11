@@ -154,3 +154,13 @@ class VideoShot:
             cv2.imwrite("outputs/transitions/frame%d.jpg" % (fs[0]+1), image)
 
         print("transitions extracted successfully!")
+
+    def get_nearest_end_frame(self, curr_frame, cuts, transitions):
+        combined = cuts + transitions
+        combined_ = [row[0] for row in combined]
+        search_space = [num for num in combined_ if num > curr_frame]
+        if search_space:
+            next_frame = min(search_space)
+            return next_frame
+        else:
+            return None
