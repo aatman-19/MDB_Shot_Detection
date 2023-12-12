@@ -5,14 +5,15 @@ import numpy as np
 
 class VideoShot:
     def __init__(self, path):
-        self.tb = None
-        self.ts = None
         self.video_path = path
-        self.cuts = []
-        self.transitions = []
-        self.feature_matrix = []
-        self.sd = []
-
+        self.feature_matrix = self.frame_capture(self.video_path)
+        self.sd = self.sd_array(self.feature_matrix)
+        self.tb, self.ts = self.get_thresholds(self.sd)
+        self.cuts = self.get_ce(self.sd, self.tb)
+        self.fs_c, self.fe_c = self.get_fs_candidates(self.sd, self.tb, self.ts)
+        self.transitions = self.get_real_fs(self.fs_c,self.fe_c,self.sd,self.tb)
+        self.output_cuts(self.cuts,self.video_path)
+        self.output_transitions(self.transitions,self.video_path)
 
     def intensity_code_feature(self, image):
         # Extract the R, G, and B channels
@@ -144,14 +145,14 @@ class VideoShot:
         vid_obj = cv2.VideoCapture(video_path)
 
         for fs in transitions:
-            vid_obj.set(cv2.CAP_PROP_POS_FRAMES, fs[0]+1)
+            vid_obj.set(cv2.CAP_PROP_POS_FRAMES, fs[0] + 1)
             success, image = vid_obj.read()
 
             if not success:
                 print("Error loading the cut scenes")
                 return
 
-            cv2.imwrite("outputs/transitions/frame%d.jpg" % (fs[0]+1), image)
+            cv2.imwrite("outputs/transitions/frame%d.jpg" % (fs[0] + 1), image)
 
         print("transitions extracted successfully!")
 
@@ -163,4 +164,4 @@ class VideoShot:
             next_frame = min(search_space)
             return next_frame
         else:
-            return None
+            return 4999
