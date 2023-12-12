@@ -15,6 +15,7 @@ class VideoShot:
         self.output_cuts(self.cuts,self.video_path)
         self.output_transitions(self.transitions,self.video_path)
 
+    # Intensity code feature extraction from frames
     def intensity_code_feature(self, image):
         # Extract the R, G, and B channels
         b_channel = image[:, :, 0]
@@ -35,6 +36,7 @@ class VideoShot:
         histogram = list(hist.astype(np.int64)[:25])
         return histogram
 
+    # Reads the video file & takes out the frames 1000 to 4999 (Based on instructions) & returns the feature matrix
     def frame_capture(self, path):
         vid_obj = cv2.VideoCapture(path)
         frame_count = 0
@@ -60,9 +62,10 @@ class VideoShot:
         for i in range(0, len(temp_mat)):
             feature_matrix[i] = temp_mat[i]
 
-        print(len(feature_matrix))
+        print(f"length of feature_matrix: {len(feature_matrix)}")
         return feature_matrix
 
+    # Get frame by frame difference values - SD
     def sd_array(self, feature_matrix):
         sd = list()
         length = len(feature_matrix)
@@ -73,6 +76,7 @@ class VideoShot:
             sd.append(diff)
         return sd
 
+    # Get the thresholds - Tb & Ts
     def get_thresholds(self, sd_array):
         deviation = np.std(sd_array)
         m = np.mean(sd_array)
@@ -80,6 +84,7 @@ class VideoShot:
         t_transition = round(2 * m)
         return t_cut, t_transition
 
+    # Get the Cuts
     def get_ce(self, sd_array, tb):
         ce = list()
         for i in range(0, len(sd_array)):
@@ -88,6 +93,7 @@ class VideoShot:
                 ce.append(cut)
         return ce
 
+    # get fs & fe candidates
     def get_fs_candidates(self, sd_array, tb, ts):
         fs_candidate = list()
         fe_candidate = list()
@@ -115,6 +121,7 @@ class VideoShot:
             i += 1
         return fs_candidate, fe_candidate
 
+    # based on the conditions, check for real fs & fe candidates.
     def get_real_fs(self, fs_candidate, fe_candidate, sd_array, tb):
         f_real = list()
         length = len(fs_candidate)
@@ -127,8 +134,13 @@ class VideoShot:
                 f_real.append(f_element)
         return f_real
 
+    # generates the output folder to store cut (Cs+1) frames to display in GUI
     def output_cuts(self, cuts, video_path):
         vid_obj = cv2.VideoCapture(video_path)
+        cut_img_folder = "outputs/cuts/"
+
+        if not os.path.exists(cut_img_folder):
+            os.makedirs(cut_img_folder)
 
         for ce in cuts:
             vid_obj.set(cv2.CAP_PROP_POS_FRAMES, ce[1])
@@ -141,8 +153,13 @@ class VideoShot:
             cv2.imwrite("outputs/cuts/frame%d.jpg" % ce[1], image)
         print("cuts extracted successfully!")
 
+    # generates the output folder to store transition (Fs+1) frames to display in GUI
     def output_transitions(self, transitions, video_path):
         vid_obj = cv2.VideoCapture(video_path)
+        transition_img_folder = "outputs/transitions/"
+
+        if not os.path.exists(transition_img_folder):
+            os.makedirs(transition_img_folder)
 
         for fs in transitions:
             vid_obj.set(cv2.CAP_PROP_POS_FRAMES, fs[0] + 1)
@@ -156,6 +173,7 @@ class VideoShot:
 
         print("transitions extracted successfully!")
 
+    # based on the given start frame , gets the corresponding end-frame for a shot boundary
     def get_nearest_end_frame(self, curr_frame, cuts, transitions):
         combined = cuts + transitions
         combined_ = [row[0] for row in combined]

@@ -17,8 +17,13 @@ transition_imgs = None
 def load_object(video_path):
     global OBJ
     OBJ = VideoShot(video_path)
+    print("-" * 20 + "cuts" + "-" * 20)
+    print(OBJ.cuts)
+    print("-" * 20 + "Transition" + "-" * 20)
+    print(OBJ.transitions)
 
 
+# Loading the video & other elements
 def load_video(p_l, button):
     global VID_PATH, OBJ
     video_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi;*.mpg")])
@@ -32,6 +37,7 @@ def load_video(p_l, button):
     load_files()
 
 
+# Generating the grid in cuts & transition tabs
 def load_files():
     global cut_imgs, transition_imgs
     cut_img_folder = "outputs/cuts/"
@@ -52,19 +58,20 @@ def load_files():
         create_image_grid(sc2, row, col, p, open_shot_window)
 
 
+# generates a separate window to show the specific shot
 def show_video_shot(frame, path):
     video_frame = ctk.CTkToplevel(frame)
     video_frame.title(f"Shot from frame {path[-8:-4]}")
-    video_frame.attributes("-topmost",True)
+    video_frame.attributes("-topmost", True)
     img = ctk.CTkImage(dark_image=Image.open(path), size=(500, 500))
     label = ctk.CTkLabel(video_frame, image=img, text=path[-13:-4], compound="top")
     label.pack()
-    start_frame = int(path[-8:-4])
+    start_frame = int(path[-8:-4]) + 1
 
     if OBJ:
         end_frame = OBJ.get_nearest_end_frame(start_frame, OBJ.cuts, OBJ.transitions)
     else:
-        end_frame = start_frame # function call to get_nearest_end_frame
+        end_frame = start_frame
 
     if VID_PATH:
         video_path = VID_PATH
@@ -76,6 +83,7 @@ def show_video_shot(frame, path):
     play_button.pack()
 
 
+# plays the video snippet
 def play_video(parent_label, start_frame, end_frame, video_path):
     cap = cv2.VideoCapture(video_path)
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
@@ -91,7 +99,6 @@ def play_video(parent_label, start_frame, end_frame, video_path):
             parent_label.image = img
             parent_label.after(30, update_label)
         else:
-            # Video playback is finished or an error occurred
             cap.release()
 
     update_label()
@@ -143,6 +150,5 @@ sc1 = ctk.CTkScrollableFrame(tabView.tab("Cut Scenes"), height=700, width=700)
 sc2 = ctk.CTkScrollableFrame(tabView.tab("Gradual Transitions"), height=700, width=700)
 sc1.pack()
 sc2.pack()
-
 
 app.mainloop()
